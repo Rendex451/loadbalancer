@@ -2,14 +2,12 @@ package roundrobin
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 	"time"
 
 	"loadbalancer/internal/backend"
@@ -81,21 +79,9 @@ func healthCheck() {
 
 var serverPool serverpool.ServerPool
 
-func main() {
-	var serverList string
-	var port int
-	flag.StringVar(&serverList, "backends", "", "Load balanced backends, use commas to separate")
-	flag.IntVar(&port, "port", 3030, "Port to serve")
-	flag.Parse()
-
-	if len(serverList) == 0 {
-		log.Fatal("Please provide one or more backends to load balance")
-	}
-
-	// parse servers
-	tokens := strings.Split(serverList, ",")
-	for _, tok := range tokens {
-		serverUrl, err := url.Parse(tok)
+func StartRR(serverList []string, port int) {
+	for _, server := range serverList {
+		serverUrl, err := url.Parse(server)
 		if err != nil {
 			log.Fatal(err)
 		}

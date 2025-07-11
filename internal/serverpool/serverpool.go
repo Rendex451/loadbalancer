@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 
 	"loadbalancer/internal/backend"
+	"loadbalancer/internal/utils"
 )
 
 type ServerPool struct {
@@ -35,7 +36,7 @@ func (s *ServerPool) GetNextPeer() *backend.Backend {
 	l := len(s.backends) + next
 	for i := next; i < l; i++ {
 		idx := i % len(s.backends)
-		if s.backends[idx].IsAlive() {
+		if s.backends[idx].GetIsAlive() {
 			if i != next {
 				atomic.StoreUint64(&s.current, uint64(idx))
 			}
@@ -48,7 +49,7 @@ func (s *ServerPool) GetNextPeer() *backend.Backend {
 func (s *ServerPool) HealthCheck() {
 	for _, b := range s.backends {
 		status := "up"
-		alive := utils.isBackendAlive(b.URL)
+		alive := utils.IsBackendAlive(b.URL)
 		b.SetIsAlive(alive)
 		if !alive {
 			status = "down"
