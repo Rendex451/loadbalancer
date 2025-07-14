@@ -11,8 +11,14 @@ import (
 	"time"
 
 	"loadbalancer/internal/backend"
-	"loadbalancer/internal/serverpool"
 )
+
+type ServerPool interface {
+	AddBackend(backend.BackendPeer)
+	MarkBackendStatus(backendUrl *url.URL, alive bool)
+	GetNextPeer() backend.BackendPeer
+	HealthCheck()
+}
 
 const (
 	Attempts int = iota
@@ -77,7 +83,7 @@ func healthCheck() {
 	}
 }
 
-var serverPool serverpool.ServerPool
+var serverPool ServerPool
 
 func StartRR(serverList []string, port int) {
 	for _, server := range serverList {
@@ -109,21 +115,17 @@ func StartRR(serverList []string, port int) {
 			lb(writer, request.WithContext(ctx))
 		}
 
-		serverPool.AddBackend(&backend.Backend{
-			URL:          serverUrl,
-			IsAlive:      true,
-			ReverseProxy: proxy,
-		})
+		newPeer := backend.NewBackend(serverUrl, proxy)
+		serverPool.AddBackend(newPeer)
+
 		log.Printf("Configured server: %s\n", serverUrl)
 	}
 
-	// create http server
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: http.HandlerFunc(lb),
 	}
 
-	// start health checking
 	go healthCheck()
 
 	log.Printf("Load Balancer started at :%d\n", port)
