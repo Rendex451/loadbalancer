@@ -11,7 +11,7 @@ import (
 type Backend struct {
 	URL          *url.URL
 	ReverseProxy *httputil.ReverseProxy
-	connCount    atomic.Int32
+	connsCount   atomic.Int32
 	healthy      atomic.Bool
 	lastCheck    atomic.Int64 // unix timestamp
 }
@@ -25,18 +25,18 @@ func New(url *url.URL, proxy *httputil.ReverseProxy) *Backend {
 	return b
 }
 
-func (b *Backend) IncConn() {
-	b.connCount.Add(1)
+func (b *Backend) IncConns() {
+	b.connsCount.Add(1)
 }
 
-func (b *Backend) DecConn() {
-	if b.connCount.Load() > 0 {
-		b.connCount.Add(-1)
+func (b *Backend) DecConns() {
+	if b.connsCount.Load() > 0 {
+		b.connsCount.Add(-1)
 	}
 }
 
-func (b *Backend) GetConn() int32 {
-	return b.connCount.Load()
+func (b *Backend) GetConns() int32 {
+	return b.connsCount.Load()
 }
 
 func (b *Backend) SetHealthy(healthy bool) {

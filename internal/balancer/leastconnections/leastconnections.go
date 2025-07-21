@@ -17,7 +17,7 @@ func (h *backendHeap) Less(i, j int) bool {
 	if h.backends[i].IsHealthy() != h.backends[j].IsHealthy() {
 		return h.backends[i].IsHealthy()
 	}
-	return h.backends[i].GetConn() < h.backends[j].GetConn()
+	return h.backends[i].GetConns() < h.backends[j].GetConns()
 }
 func (h *backendHeap) Swap(i, j int) {
 	h.backends[i], h.backends[j] = h.backends[j], h.backends[i]
@@ -70,13 +70,13 @@ func (lcb *LeastConnectionsBalancer) NextBackend() (*backend.Backend, error) {
 		return nil, errors.New("no healthy backends")
 	}
 
-	b.IncConn()
+	b.IncConns()
 	heap.Fix(lcb.heap, 0)
 	return b, nil
 }
 
 func (lcb *LeastConnectionsBalancer) ReleaseBackend(b *backend.Backend) {
-	b.DecConn()
+	b.DecConns()
 
 	lcb.mux.Lock()
 	defer lcb.mux.Unlock()

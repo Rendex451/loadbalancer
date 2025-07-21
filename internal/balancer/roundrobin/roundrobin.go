@@ -30,18 +30,20 @@ func (rrb *RoundRobinBalancer) NextBackend() (*backend.Backend, error) {
 	l := len(rrb.backends) + next
 	for i := next; i < l; i++ {
 		idx := i % len(rrb.backends)
-		if rrb.backends[idx].IsHealthy() {
+		b := rrb.backends[idx]
+		if b.IsHealthy() {
 			if i != next {
 				atomic.StoreUint64(&rrb.current, uint64(idx))
 			}
-			return rrb.backends[idx], nil
+			b.IncConns()
+			return b, nil
 		}
 	}
 	return nil, errors.New("no healthy backends")
 }
 
 func (rrb *RoundRobinBalancer) ReleaseBackend(b *backend.Backend) {
-	b.DecConn()
+	b.DecConns()
 }
 
 func (rrb *RoundRobinBalancer) UpdateBackendHealth(b *backend.Backend, isHealthy bool) {

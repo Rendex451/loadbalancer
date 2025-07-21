@@ -94,7 +94,7 @@ func healthCheckRoutine(lb balancer.Balancer, backends []*backend.Backend, inter
 				log.Printf("Backend %s status changed: %s", b.URL.String(), status)
 			}
 
-			log.Printf("Backend %s [conns: %d] [healthy: %v]", b.URL.String(), b.GetConn(), b.IsHealthy())
+			log.Printf("Backend %s [conns: %d] [healthy: %v]", b.URL.String(), b.GetConns(), b.IsHealthy())
 		}
 	}
 }
